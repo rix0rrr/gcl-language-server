@@ -134,6 +134,10 @@ def write_output(output):
 running = True
 
 def main():
+    logging.basicConfig(format='%(asctime)-15s [%(levelname)s] %(message)s',
+            filename='/Users/rix0rrr/gcls.log',
+            level=logging.DEBUG)
+    log('Current directory is %s' % os.getcwd())
     try:
         unbuffered_stdin = os.fdopen(sys.stdin.fileno(), 'rb', 0)
 
@@ -164,8 +168,4 @@ def main():
         traceback.print_exc(e)
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)-15s [%(levelname)s] %(message)s',
-            filename='/Users/rix0rrr/gcls.log',
-            level=logging.DEBUG)
-    log('Current directory is %s' % os.getcwd())
     main()
