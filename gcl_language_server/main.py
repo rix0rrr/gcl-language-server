@@ -21,7 +21,11 @@ def log(text):
     logger.info(text)
 
 
-gcl_server = gclserver.GCLServer()
+search_directories = []
+if 'GCLPATH' in os.environ:
+    search_directories = os.environ['GCLPATH'].split(':')
+
+gcl_server = gclserver.GCLServer(search_directories)
 
 
 def named_add_method(name):
@@ -57,7 +61,7 @@ def initialize(processId, rootPath, capabilities, trace):
                         "resolveProvider": False,
                         "triggerCharacters": ['.']
                     },
-                    "definitionProvider": True
+                    "definitionProvider": False  # FIXME
                 }
             }
 
@@ -85,9 +89,10 @@ def didChange(textDocument, contentChanges):
 
 @named_add_method('textDocument/hover')
 def hover(textDocument, position):
-    uri = textDocument['uri']
-    line, character = position['line'], position['character']
-    return {'contents': {'language': 'gcl', 'value': 'haha'}}
+    value = gcl_server.hover_info(textDocument['uri'], position['line'] + 1, position['character'] + 1)
+    if value:
+        return {'contents': {'language': 'gcl', 'value': value}}
+    return {}
     # contents: string =>  markdown
     # range { start { line, character }, end { line, character }}
 
@@ -101,15 +106,17 @@ def definition(textDocument, position):
 
 
 @named_add_method('textDocument/completion')
-def definition(textDocument, position):
-    uri = textDocument['uri']
-    line, character = position['line'], position['character']
+def completion(textDocument, position):
+    completions = gcl_server.completions(textDocument['uri'], position['line'] + 1, position['character'] + 1)
     return {'isIncomplete': False,
-            'items': [
-                { 'label': 'hoop le boop' },
-                { 'label': 'hoogey woop' },
-                ]}
+            'items': [mkCompletion(c) for c in completions.values()]}
 
+
+def mkCompletion(c):
+    return {'label': c.name,
+            'kind': 5 if c.builtin else 1,
+            'detail': 'built-in' if c.builtin else '',
+            'documentation': c.doc}
 
 def parse_headers(lines):
     ret = {}
