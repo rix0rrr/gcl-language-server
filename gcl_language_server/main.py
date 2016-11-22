@@ -1,24 +1,32 @@
 #!/usr/bin/env python2.7
+from __future__ import absolute_import
+
+import argparse
 import json
 import logging
 import sys
 import pprint
 import os
-from mimetools import Message
-from StringIO import StringIO
+
+try:
+  from mimetools import Message
+except ImportError:
+  from email.message import Message
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from jsonrpc import JSONRPCResponseManager, dispatcher
 from jsonrpc import jsonrpc2
 
-import gclserver
+from . import gclserver
 
 
 TextDocumentSyncKind_Full = 1
 
 logger = logging.getLogger('gcls')
-
-def log(text):
-    logger.info(text)
 
 
 search_directories = []
@@ -132,7 +140,6 @@ def handle(payload):
 
 
 def write_output(output):
-    log('Output was %s' % output)
     sys.stdout.write('Content-Length: %d\r\n' % len(output))
     sys.stdout.write('\r\n')
     sys.stdout.write(output)
@@ -142,9 +149,10 @@ running = True
 
 def main():
     logging.basicConfig(format='%(asctime)-15s [%(levelname)s] %(message)s',
-            filename='/Users/rix0rrr/gcls.log',
-            level=logging.DEBUG)
-    log('Current directory is %s' % os.getcwd())
+            stream=sys.stderr,
+            level=logging.ERROR)
+
+    logger.info('Current directory is %s', os.getcwd())
     try:
         unbuffered_stdin = os.fdopen(sys.stdin.fileno(), 'rb', 0)
 
@@ -154,15 +162,15 @@ def main():
             if not line:
                 break
             line = line.strip()
-            log('< %s' % line)
+            logger.debug('< %s' % line)
             if not line:
-                log('Headers: %r' % headers)
+                logger.debug('Headers: %r' % headers)
                 headers = parse_headers(headers)
                 if 'content-length' in headers:
                     length = int(headers['content-length'])
-                    log('Waiting for %d bytes' % length)
+                    logger.debug('Waiting for %d bytes' % length)
                     body = unbuffered_stdin.read(length)
-                    log('Read body: %s' % body)
+                    logger.debug('Read body: %s' % body)
                     output = handle(body)
                     if output:
                         write_output(output)
@@ -170,9 +178,8 @@ def main():
             else:
                 headers.append(line)
     except Exception as e:
-        import traceback
-        log(traceback.format_exc(e))
-        traceback.print_exc(e)
+        logger.exception('Uncaught error')
+
 
 if __name__ == '__main__':
     main()
