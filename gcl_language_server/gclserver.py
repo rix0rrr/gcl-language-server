@@ -86,10 +86,13 @@ class Document(object):
   def hover_info(self, line, col):
     with framework.DisableCaching():
       v = ast_util.find_value_at_cursor(self.error_parse(), self.url.path, line, col)
+      if isinstance(v, Exception):
+        # Will be styled elsewhere
+        raise v
       if isinstance(v, (types.FunctionType, types.BuiltinFunctionType)):
         return 'function'
       if framework.is_str(v):
-        return repr(v).lstrip('u')
+        return '"' + v.replace('"', '\\"') + '"'
       return str(v)
 
 

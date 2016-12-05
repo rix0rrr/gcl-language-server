@@ -92,11 +92,14 @@ class LanguageProtocolServer(object):
         return self.handler.updateDocument(textDocument['uri'], contentChanges[0]['text'], self.publish_diagnostics)
 
     def hover(self, textDocument, position):
-        value = self.handler.getHoverInfo(textDocument['uri'], position['line'] + 1, position['character'] + 1)
-        assert value is None or isinstance(value, HoverInfo)
-        if value and value.value:
-            return {'contents': attr.asdict(value)}
-        return {}
+        try:
+            value = self.handler.getHoverInfo(textDocument['uri'], position['line'] + 1, position['character'] + 1)
+            assert value is None or isinstance(value, HoverInfo)
+            if value and value.value:
+                return {'contents': attr.asdict(value)}
+            return {}
+        except Exception as e:
+            return {'contents': {'language': 'text', 'value': str(e)}}
         # contents: string =>  markdown
         # range { start { line, character }, end { line, character }}
 
