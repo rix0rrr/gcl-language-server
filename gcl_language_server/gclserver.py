@@ -86,6 +86,8 @@ class Document(object):
   def hover_info(self, line, col):
     with framework.DisableCaching():
       v = ast_util.find_value_at_cursor(self.error_parse(), self.url.path, line, col)
+      if v is None:
+        return None
       if isinstance(v, Exception):
         # Will be styled elsewhere
         raise v
