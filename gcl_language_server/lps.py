@@ -129,7 +129,7 @@ class LanguageProtocolServer(object):
     @log_exceptions
     def completion(self, textDocument, position):
         completions = self.handler.getCompletions(textDocument['uri'], position['line'] + 1, position['character'] + 1)
-        for c in completions.values():
+        for c in completions:
             assert isinstance(c, Completion)
 
         return {'isIncomplete': False,
