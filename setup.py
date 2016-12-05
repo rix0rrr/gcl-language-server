@@ -65,6 +65,6 @@ setup(
     # project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['gcl>=0.6.9', 'json-rpc==1.10.3'],
+    install_requires=['gcl>=0.6.9', 'json-rpc==1.10.3', 'attrs>=16.3.0'],
 )
 

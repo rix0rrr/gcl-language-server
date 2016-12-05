@@ -1,5 +1,6 @@
 import logging
 from os import path
+import types
 
 try:
   import urlparse
@@ -84,7 +85,12 @@ class Document(object):
 
   def hover_info(self, line, col):
     with framework.DisableCaching():
-      return ast_util.find_value_at_cursor(self.error_parse(), self.url.path, line, col)
+      v = ast_util.find_value_at_cursor(self.error_parse(), self.url.path, line, col)
+      if isinstance(v, (types.FunctionType, types.BuiltinFunctionType)):
+        return 'function'
+      if framework.is_str(v):
+        return repr(v).lstrip('u')
+      return str(v)
 
 
 class InMemoryFiles(runtime.OnDiskFiles):
@@ -93,11 +99,9 @@ class InMemoryFiles(runtime.OnDiskFiles):
     self.gclserver = gclserver
 
   def exists(self, full_path):
-    logger.info('Existing')
     return self.gclserver.contains(full_path) or path.isfile(full_path)
 
   def load(self, full_path):
-    logger.info('Loading')
     if self.gclserver.contains(full_path):
       return self.gclserver.get_memory_file(full_path)
 
