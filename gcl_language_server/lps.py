@@ -9,6 +9,17 @@ from jsonrpc import jsonrpc2
 logger = logging.getLogger('gcls')
 
 
+def log_exceptions(fn):
+    def wrapped_function(self, *args, **kwargs):
+        try:
+            return fn(self, *args, **kwargs)
+        except Exception as e:
+            logger.exception('Error handling RPC')
+            raise
+    wrapped_function.__name__ = fn.__name__
+    return wrapped_function
+
+
 class LanguageProtocolServer(object):
     def __init__(self, handler, istream, ostream):
         self.handler = handler
@@ -67,6 +78,7 @@ class LanguageProtocolServer(object):
         })
         self.write_output(request.json)
 
+    @log_exceptions
     def initialize(self, processId, rootPath, capabilities, trace):
         return {"capabilities": {
                     "textDocumentSync": TextDocumentSyncKind.Full,
@@ -85,12 +97,15 @@ class LanguageProtocolServer(object):
     def setTraceNotification(self, value):
         pass
 
+    @log_exceptions
     def didOpen(self, textDocument):
         return self.handler.updateDocument(textDocument['uri'], textDocument['text'], self.publish_diagnostics)
 
+    @log_exceptions
     def didChange(self, textDocument, contentChanges):
         return self.handler.updateDocument(textDocument['uri'], contentChanges[0]['text'], self.publish_diagnostics)
 
+    @log_exceptions
     def hover(self, textDocument, position):
         try:
             value = self.handler.getHoverInfo(textDocument['uri'], position['line'] + 1, position['character'] + 1)
@@ -103,6 +118,7 @@ class LanguageProtocolServer(object):
         # contents: string =>  markdown
         # range { start { line, character }, end { line, character }}
 
+    @log_exceptions
     def definition(self, textDocument, position):
         # FIXME: N/IMPL
         uri = textDocument['uri']
@@ -110,6 +126,7 @@ class LanguageProtocolServer(object):
         return {'uri': uri,
                 'range': {'line': 0, 'character': 0}}
 
+    @log_exceptions
     def completion(self, textDocument, position):
         completions = self.handler.getCompletions(textDocument['uri'], position['line'] + 1, position['character'] + 1)
         for c in completions.values():

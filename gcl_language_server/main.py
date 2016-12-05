@@ -77,8 +77,8 @@ class GCLProtocolHandler(lps.LanguageProtocolHandler):
         value = self.gcl_server.hover_info(uri, line, char)
         return lps.HoverInfo(language='gcl', value=value or '')
 
-    def getCompletions(self, textDocument, position):
-        completion_map = self.gcl_server.completions(textDocument['uri'], position['line'] + 1, position['character'] + 1)
+    def getCompletions(self, uri, line, char):
+        completion_map = self.gcl_server.completions(uri, line, char)
         return map(mkCompletion, completion_map.values())
 
 
